@@ -1,9 +1,16 @@
-﻿namespace PhoneBookConsoleApp;
+﻿using Microsoft.Extensions.DependencyInjection;
+
+namespace PhoneBookConsoleApp;
 
 internal class Program
 {
-    static void Main(string[] args)
+    static void Main()
     {
-        Console.WriteLine("Hello, World!");
+        // Create a service collection and configure our services
+        var serviceProvider = Startup.ConfigureServices();
+        // Get an instance of our menu
+        var menu = serviceProvider.GetRequiredService<PhoneBookMenu>();
+        // Run the menu
+        Task.Run(menu.ShowMenu).GetAwaiter().GetResult();
     }
 }

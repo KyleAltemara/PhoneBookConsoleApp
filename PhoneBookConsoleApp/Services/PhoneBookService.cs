@@ -1,9 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using PhoneBookConsoleApp.Models;
 
-namespace PhoneBookConsoleApp;
+namespace PhoneBookConsoleApp.Services;
 
 internal class PhoneBookService(PhoneBookContext context) : IPhoneBookService
 {
+    /// <summary>
+    /// The database context for the phone book.
+    /// </summary>
     private readonly PhoneBookContext _context = context;
 
     public async Task<List<ContactDTO>> GetContacts() => await _context.Contacts.Select(c => c.ToDTO()).ToListAsync();
@@ -12,9 +16,9 @@ internal class PhoneBookService(PhoneBookContext context) : IPhoneBookService
     {
         var newContact = new Contact
         {
-            Name = contact.Name,
-            Email = contact.Email,
-            PhoneNumber = contact.PhoneNumber
+            Name = contact.Name!,
+            Email = contact.Email!,
+            PhoneNumber = contact.PhoneNumber!
         };
 
         _context.Contacts.Add(newContact);
@@ -36,8 +40,8 @@ internal class PhoneBookService(PhoneBookContext context) : IPhoneBookService
         var contactToUpdate = await _context.Contacts.FirstOrDefaultAsync(c => c.Name == contact.Name);
         if (contactToUpdate != null)
         {
-            contactToUpdate.Email = contact.Email;
-            contactToUpdate.PhoneNumber = contact.PhoneNumber;
+            contactToUpdate.Email = contact.Email!;
+            contactToUpdate.PhoneNumber = contact.PhoneNumber!;
             await _context.SaveChangesAsync();
         }
     }

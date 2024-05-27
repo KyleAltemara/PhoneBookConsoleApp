@@ -1,12 +1,25 @@
-﻿using Spectre.Console;
+﻿using PhoneBookConsoleApp.Models;
+using PhoneBookConsoleApp.Services;
+using Spectre.Console;
 using System.ComponentModel.DataAnnotations;
 
 namespace PhoneBookConsoleApp;
 
+/// <summary>
+/// Represents the phone book console menu.
+/// </summary>
+/// <param name="phoneBookService"> The phone book service. <see cref="IPhoneBookService"/> </param>
 public class PhoneBookMenu(IPhoneBookService phoneBookService)
 {
+    /// <summary>
+    /// The phone book service used to interact with the phone book database.
+    /// </summary>
     private readonly IPhoneBookService _phoneBookService = phoneBookService;
 
+    /// <summary>
+    /// Shows the phone book console menu.
+    /// </summary>
+    /// <returns> An asynchronous task. </returns>
     public async Task ShowMenu()
     {
         AnsiConsole.WriteLine("Phone Book Console App");
@@ -45,6 +58,10 @@ public class PhoneBookMenu(IPhoneBookService phoneBookService)
         }
     }
 
+    /// <summary>
+    /// Lists all contacts in the phone book.
+    /// </summary>
+    /// <returns> An asynchronous task. </returns>
     private async Task ListContacts()
     {
         var contacts = await _phoneBookService.GetContacts();
@@ -61,12 +78,16 @@ public class PhoneBookMenu(IPhoneBookService phoneBookService)
 
         foreach (var contact in contacts)
         {
-            table.AddRow(contact.Name, contact.Email, contact.PhoneNumber);
+            table.AddRow(contact.Name!, contact.Email!, contact.PhoneNumber!);
         }
 
         AnsiConsole.Write(table);
     }
 
+    /// <summary>
+    /// Adds a new contact to the phone book.
+    /// </summary>
+    /// <returns> An asynchronous task. </returns>
     private async Task AddContact()
     {
         var contact = new ContactDTO
@@ -121,6 +142,10 @@ public class PhoneBookMenu(IPhoneBookService phoneBookService)
         AnsiConsole.MarkupLine("[green]Contact added successfully.[/]");
     }
 
+    /// <summary>
+    /// Updates an existing contact in the phone book.
+    /// </summary>
+    /// <returns> An asynchronous task. </returns>
     private async Task UpdateContact()
     {
         var contacts = await _phoneBookService.GetContacts();
@@ -130,7 +155,7 @@ public class PhoneBookMenu(IPhoneBookService phoneBookService)
             return;
         }
 
-        var contactDictionary = contacts.ToDictionary(c => c.Name, c => c);
+        var contactDictionary = contacts.ToDictionary(c => c.Name!, c => c);
         contactDictionary.Add("Cancel", new());
         var contactName = AnsiConsole.Prompt(new SelectionPrompt<string>()
             .Title("Choose a contact to update:")
@@ -192,6 +217,10 @@ public class PhoneBookMenu(IPhoneBookService phoneBookService)
         AnsiConsole.MarkupLine("[green]Contact updated successfully.[/]");
     }
 
+    /// <summary>
+    /// Deletes a contact from the phone book.
+    /// </summary>
+    /// <returns> An asynchronous task. </returns>
     private async Task DeleteContact()
     {
         var contacts = await _phoneBookService.GetContacts();
@@ -201,7 +230,7 @@ public class PhoneBookMenu(IPhoneBookService phoneBookService)
             return;
         }
 
-        var contactDictionary = contacts.ToDictionary(c => c.Name, c => c);
+        var contactDictionary = contacts.ToDictionary(c => c.Name!, c => c);
         contactDictionary.Add("Cancel", new());
         var contactName = AnsiConsole.Prompt(new SelectionPrompt<string>()
             .Title("Choose a contact to delete:")

@@ -1,31 +1,24 @@
 ﻿using Spectre.Console;
+using System.ComponentModel.DataAnnotations;
 
 namespace PhoneBookConsoleApp;
 
-public class PhoneBookMenu
+public class PhoneBookMenu(IPhoneBookService phoneBookService)
 {
-    private readonly PhoneBookContext _context;
-
-    public PhoneBookMenu(PhoneBookContext context)
-    {
-        _context = context;
-    }
+    private readonly IPhoneBookService _phoneBookService = phoneBookService;
 
     public async Task ShowMenu()
     {
-        // Create the database if it doesn't exist
-        _context.Database.EnsureCreated();
-
         AnsiConsole.WriteLine("Phone Book Console App");
         var continueRunning = true;
         while (continueRunning)
         {
             var menuOptions = new Dictionary<string, Func<Task>>
                 {
-                    { "List Contacts", () => ListContacts() },
-                    { "Add Contact", () =>  AddContact() },
-                    { "Update Contact", () =>  UpdateContact() },
-                    { "Delete Contact", () =>  DeleteContact() },
+                    { "List Contacts", ListContacts },
+                    { "Add Contact", AddContact },
+                    { "Update Contact", UpdateContact },
+                    { "Delete Contact", DeleteContact },
                     { "Exit", () =>
                         {
                             AnsiConsole.Markup("[red]Exiting Program[/]");
@@ -47,28 +40,179 @@ public class PhoneBookMenu
             }
             else
             {
-                AnsiConsole.Markup("[red]Invalid option.[/]");
+                AnsiConsole.MarkupLine("[red]Invalid option.[/]");
             }
         }
     }
 
-    private async Task DeleteContact()
+    private async Task ListContacts()
     {
-        throw new NotImplementedException();
+        var contacts = await _phoneBookService.GetContacts();
+        if (contacts is null || contacts.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[red]No contacts found.[/]");
+            return;
+        }
+
+        var table = new Table();
+        table.AddColumn("Name");
+        table.AddColumn("Email");
+        table.AddColumn("Phone Number");
+
+        foreach (var contact in contacts)
+        {
+            table.AddRow(contact.Name, contact.Email, contact.PhoneNumber);
+        }
+
+        AnsiConsole.Write(table);
+    }
+
+    private async Task AddContact()
+    {
+        var contact = new ContactDTO
+        {
+            Name = AnsiConsole.Ask<string>("Enter contact name:").Trim()
+        };
+
+        if (string.IsNullOrWhiteSpace(contact.Name))
+        {
+            AnsiConsole.MarkupLine("[red]No contace added.[/]");
+            return;
+        }
+
+        contact.Email = AnsiConsole.Ask<string>("Enter contact email:").Trim();
+        if (string.IsNullOrWhiteSpace(contact.Email))
+        {
+            AnsiConsole.MarkupLine("[red]No contace added.[/]");
+            return;
+        }
+
+        while (!new EmailAddressAttribute().IsValid(contact.Email))
+        {
+            AnsiConsole.Markup("[red]Invalid email address.[/]");
+            contact.Email = AnsiConsole.Ask<string>("Enter contact email:").Trim();
+            if (string.IsNullOrWhiteSpace(contact.Email))
+            {
+                AnsiConsole.MarkupLine("[red]No contace added.[/]");
+                return;
+            }
+        }
+
+        contact.PhoneNumber = AnsiConsole.Ask<string>("Enter contact phone number:").Trim();
+        if (string.IsNullOrWhiteSpace(contact.PhoneNumber))
+        {
+            AnsiConsole.MarkupLine("[red]No contace added.[/]");
+            return;
+        }
+
+        while (!new PhoneAttribute().IsValid(contact.PhoneNumber))
+        {
+            AnsiConsole.MarkupLine("[red]Invalid phone number.[/]");
+            contact.PhoneNumber = AnsiConsole.Ask<string>("Enter contact phone number:").Trim()
+                ;
+            if (string.IsNullOrWhiteSpace(contact.PhoneNumber))
+            {
+                AnsiConsole.MarkupLine("[red]No contace added.[/]");
+                return;
+            }
+        }
+
+        await _phoneBookService.AddContact(contact);
+        AnsiConsole.MarkupLine("[green]Contact added successfully.[/]");
     }
 
     private async Task UpdateContact()
     {
-        throw new NotImplementedException();
+        var contacts = await _phoneBookService.GetContacts();
+        if (contacts is null || contacts.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[red]No contacts found.[/]");
+            return;
+        }
+
+        var contactDictionary = contacts.ToDictionary(c => c.Name, c => c);
+        contactDictionary.Add("Cancel", new());
+        var contactName = AnsiConsole.Prompt(new SelectionPrompt<string>()
+            .Title("Choose a contact to update:")
+            .PageSize(25)
+            .AddChoices(contactDictionary.Keys));
+        if (contactName == "Cancel")
+        {
+            return;
+        }
+
+        var contact = contactDictionary[contactName];
+        var newContact = contact.Clone();
+        if (AnsiConsole.Confirm("Do you want to update the contact name?", false))
+        {
+            newContact.Name = AnsiConsole.Ask<string>("Enter contact name:").Trim();
+        }
+
+        if (AnsiConsole.Confirm("Do you want to update the contact email?", false))
+        {
+            newContact.Email = AnsiConsole.Ask<string>("Enter contact email:").Trim();
+            while (!new EmailAddressAttribute().IsValid(contact.Email))
+            {
+                AnsiConsole.MarkupLine("[red]Invalid email address.[/]");
+                newContact.Email = AnsiConsole.Ask<string>("Enter contact email:").Trim();
+                if (string.IsNullOrWhiteSpace(contact.Email) &&
+                    AnsiConsole.Confirm("Cancle updating email?", true))
+                {
+                    newContact.Email = contact.Email;
+                    AnsiConsole.MarkupLine("[red]Email not updated.[/]");
+                    break;
+                }
+            }
+        }
+
+        if (AnsiConsole.Confirm("Do you want to update the contact phone number?", false))
+        {
+            newContact.PhoneNumber = AnsiConsole.Ask<string>("Enter contact phone number:").Trim();
+            while (!new PhoneAttribute().IsValid(contact.PhoneNumber))
+            {
+                AnsiConsole.MarkupLine("[red]Invalid phone number.[/]");
+                newContact.PhoneNumber = AnsiConsole.Ask<string>("Enter contact phone number:").Trim();
+                if (string.IsNullOrWhiteSpace(contact.PhoneNumber) &&
+                                       AnsiConsole.Confirm("Cancle updating phone number?", true))
+                {
+                    newContact.PhoneNumber = contact.PhoneNumber;
+                    AnsiConsole.MarkupLine("[red]Phone number not updated.[/]");
+                    break;
+                }
+            }
+        }
+
+        if (newContact.Name == contact.Name && newContact.Email == contact.Email && newContact.PhoneNumber == contact.PhoneNumber)
+        {
+            AnsiConsole.MarkupLine("[red]No changes made to contact.[/]");
+            return;
+        }
+
+        await _phoneBookService.UpdateContact(newContact);
+        AnsiConsole.MarkupLine("[green]Contact updated successfully.[/]");
     }
 
-    private async Task ListContacts()
+    private async Task DeleteContact()
     {
-        throw new NotImplementedException();
-    }
+        var contacts = await _phoneBookService.GetContacts();
+        if (contacts is null || contacts.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[red]No contacts found.[/]");
+            return;
+        }
 
-    private static async Task AddContact()
-    {
-        throw new NotImplementedException();
+        var contactDictionary = contacts.ToDictionary(c => c.Name, c => c);
+        contactDictionary.Add("Cancel", new());
+        var contactName = AnsiConsole.Prompt(new SelectionPrompt<string>()
+            .Title("Choose a contact to delete:")
+            .PageSize(25)
+            .AddChoices(contactDictionary.Keys));
+        if (contactName == "Cancel")
+        {
+            return;
+        }
+
+        var contact = contactDictionary[contactName];
+        await _phoneBookService.DeleteContact(contact);
     }
 }

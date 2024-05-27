@@ -2,7 +2,7 @@
 
 namespace PhoneBookConsoleApp;
 
-internal class Program
+internal static class Program
 {
     static void Main()
     {

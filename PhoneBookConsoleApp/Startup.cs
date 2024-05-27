@@ -19,7 +19,7 @@ internal static class Startup
             options.UseSqlServer(connectionString);
         })
         .AddScoped<IPhoneBookService, PhoneBookService>()
-        .AddSingleton<PhoneBookMenu>();
+        .AddScoped<PhoneBookMenu>();
         return services.BuildServiceProvider();
     }
 }

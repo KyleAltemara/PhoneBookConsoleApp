@@ -1,9 +1,9 @@
 ﻿namespace PhoneBookConsoleApp;
 
-internal interface IPhoneBookService
+public interface IPhoneBookService
 {
-    public Task<List<Contact>> GetContacts();
-    public Task AddContact(Contact contact);
-    public Task UpdateContact(Contact contact);
-    public Task DeleteContact(Contact contact);
+    public Task<List<ContactDTO>> GetContacts();
+    public Task AddContact(ContactDTO contact);
+    public Task UpdateContact(ContactDTO contact);
+    public Task DeleteContact(ContactDTO contact);
 }

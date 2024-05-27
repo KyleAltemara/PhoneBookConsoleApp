@@ -16,4 +16,11 @@ public class Contact
     [Required]
     [Phone]
     public string PhoneNumber { get; set; }
+
+    public ContactDTO ToDTO() => new()
+    {
+        Name = Name,
+        Email = Email,
+        PhoneNumber = PhoneNumber
+    };
 }

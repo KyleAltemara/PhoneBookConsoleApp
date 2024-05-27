@@ -14,11 +14,11 @@ This is a console application that allows users to manage a phone book. The appl
 
 To run the application, follow these steps:
 
-1.  Clone the repository to your local machine.
-2.  Open the solution in Visual Studio.
-3.  The user has to configure the app.config file with the appropiate connection string for SQL Sever.
-4.  Build the solution to restore NuGet packages and compile the code.
-5.  Run the application.
+1. Clone the repository to your local machine.
+2. Open the solution in Visual Studio.
+3. The user has to configure the app.config file with the appropiate connection string for SQL Sever.
+4. Build the solution to restore NuGet packages and compile the code.
+5. Run the application.
 
 ## Dependencies
 
@@ -28,10 +28,10 @@ To run the application, follow these steps:
 
 ## Usage
 
-1.  The application will display a menu with options to manage contacts or exit the application.
-2.  Select an option by using the arrow keys and press Enter.
-3.  Follow the prompts to perform the desired action.
-4.  The application will continue to run until you choose the "Exit" option.
+1. The application will display a menu with options to manage contacts or exit the application.
+2. Select an option by using the arrow keys and press Enter.
+3. Follow the prompts to perform the desired action.
+4. The application will continue to run until you choose the "Exit" option.
 
 ## License
 
